@@ -78,6 +78,8 @@ class _MyHomePageState extends State<MyHomePage>
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
+          _urlController.text = '';
+          _titleController.text = '';
           _showLinkBottomSheet();
         },
         child: const Icon(Icons.add),
@@ -91,13 +93,28 @@ class _MyHomePageState extends State<MyHomePage>
       itemBuilder: (context, index) {
         final link = _links[index];
         return ListTile(
-          title: Text(link.title),
-          subtitle: Text(link.url),
-          trailing: IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () {
-              _editLink(link);
-            },
+          leading: Icon(getDomainIcon(link.url)),
+          subtitle: Text(link.title.isEmpty ? link.url : link.title),
+          title: Text(link.url),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: () {
+                  _editLink(link);
+                },
+              ),
+              IconButton(
+                icon: const Icon(
+                  Icons.delete,
+                  color: Colors.red,
+                ),
+                onPressed: () {
+                  _deleteLink(index, link);
+                },
+              ),
+            ],
           ),
         );
       },
@@ -245,11 +262,49 @@ class _MyHomePageState extends State<MyHomePage>
     }
   }
 
+  // Define a map to map domains to their corresponding icons
+  Map<String, IconData> domainIconMap = {
+    'instagram': Icons.camera,
+    'facebook': Icons.facebook,
+    'tiktok': Icons.tiktok,
+  };
+
+// Function to get the domain icon based on the URL
+  IconData getDomainIcon(String url) {
+    // Extract the domain from the URL
+    // String domain = Uri.parse(url).host;
+    // url = 'facebook';
+    // Check if the domain exists in the map
+
+    String domain;
+
+    if (url.contains(":")) {
+      domain = Uri.parse(url)
+          .host
+          .replaceAll('www.', '')
+          .split('.')
+          .first
+          .toLowerCase();
+    } else {
+      domain = (url).replaceAll('www.', '').split('.').first.toLowerCase();
+    }
+    print(url);
+
+    print(domain);
+    if (domainIconMap.containsKey(domain)) {
+      // Return the corresponding icon
+      return domainIconMap[domain]!;
+    } else {
+      // Return a default icon for other domains
+      return Icons.public;
+    }
+  }
+
   bool _isValidUrl(String url) {
     // Regular expression for URL validation
     // This is a basic example, you may need to adjust it as needed
     final RegExp urlRegex = RegExp(
-      r"^(?:http|https):\/\/[a-zA-Z0-9\-_]+(?:\.[a-zA-Z0-9\-_]+)+[a-zA-Z0-9\-_]*\/?$",
+      r"^(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9\-_]+\.[a-zA-Z0-9\-_]+",
       caseSensitive: false,
       multiLine: false,
     );
@@ -262,6 +317,50 @@ class _MyHomePageState extends State<MyHomePage>
     _urlController.dispose();
     _titleController.dispose();
     super.dispose();
+  }
+
+  Future<void> _deleteLink(int index, Link link) async {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Confirm Delete"),
+          content: Text("Are you sure you want to delete this link?"),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () async {
+                final box = await Hive.openBox<Link>('links');
+
+                await box.deleteAt(index);
+                setState(() {
+                  _links.removeAt(index);
+                });
+
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('Delete Successfully'),
+                    action: SnackBarAction(
+                      label: 'Undo',
+                      onPressed: () {
+                        box.add(link);
+                        setState(() {
+                          _links.add(link);
+                          _urlController.clear();
+                          _titleController.clear();
+                        });
+                      },
+                    )));
+                Navigator.of(context).pop(true);
+              },
+              child: Text("Delete"),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
 
