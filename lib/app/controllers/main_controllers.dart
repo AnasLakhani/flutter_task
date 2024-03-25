@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_task/app/utils/my_utils.dart';
-import 'package:flutter_task/app/views/dialogs/delete_link.dart';
-import 'package:flutter_task/app/views/dialogs/edit_link.dart';
+import 'package:flutter_task/app/views/dialogs/delete_link_dialog.dart';
+import 'package:flutter_task/app/views/dialogs/link_dialog.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/route_manager.dart';
 import 'package:get/state_manager.dart';
