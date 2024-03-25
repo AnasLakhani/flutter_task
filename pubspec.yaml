@@ -38,6 +38,7 @@ dependencies:
   hive: ^2.0.4
   path_provider: ^2.0.2
   fluttertoast: ^8.2.4
+  get: ^4.6.6
 
 dev_dependencies:
   flutter_test:
